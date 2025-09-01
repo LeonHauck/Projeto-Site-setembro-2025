@@ -1,0 +1,215 @@
+/* Fundo empresarial com imagem */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-image: url('https://images.unsplash.com/photo-1521791136064-7986c2920216');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #333;
+  position: relative;
+}
+
+/* Camada escura atrás do login */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  z-index: 1;
+}
+
+/* Remove overlay após login */
+body.logado::before {
+  display: none;
+}
+
+/* Cartões visuais */
+.card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Tela de login centralizada */
+#telaLogin {
+  max-width: 400px;
+  margin: 100px auto;
+  z-index: 2;
+}
+
+/* Painel principal acima da camada */
+#painelPrincipal {
+  position: relative;
+  z-index: 2;
+}
+
+/* Inputs e botões */
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+button {
+  background-color: #0078D4;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #005a9e;
+}
+
+/* Barra de abas no topo */
+.abas {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #fff;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 10px 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  border-bottom: 1px solid #ddd;
+}
+
+/* Botões das abas compactos */
+.aba {
+  padding: 6px 14px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.aba:hover {
+  background-color: #e0e0e0;
+}
+
+.aba.ativa {
+  background-color: #0078D4;
+  color: white;
+}
+
+/* Cabeçalho com perfil no canto direito */
+#usuarioInfo {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  background-color: #fff;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  border-bottom: 1px solid #ddd;
+}
+
+/* Foto de perfil no topo */
+#fotoTopo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Nome e nível */
+#nomeUsuario {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+#nivelUsuario {
+  font-size: 12px;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* Ícone de nível */
+#iconeNivel {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+/* Botão de logout compacto */
+#logout {
+  padding: 5px 1px;
+  font-size: 12px;
+  background-color: #0078D4;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  height: 28px;
+  line-height: 1;
+  transition: background-color 0.3s ease;
+}
+
+#logout:hover {
+  background-color: #0078D4;
+}
+
+/* Conteúdo das abas */
+.conteudo-aba {
+  display: none;
+  padding: 20px;
+}
+
+.conteudo-aba.ativa {
+  display: block;
+}
+
+/* Tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+/* Rodapé */
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Corrige largura do botão de logout */
+#logout {
+  width: auto !important;
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: #0078D4;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+  transition: background-color 0.3s ease;
+}
+
+#logout:hover {
+  background-color: #0078D4;
+}
+

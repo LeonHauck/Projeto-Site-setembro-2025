@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Giro de Itens</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Tela de Login -->
+  <div id="telaLogin" class="card">
+    <h2>Login</h2>
+    <form id="formLogin">
+      <input type="text" id="usuario" placeholder="Usuário" required />
+      <input type="password" id="senha" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+    <p id="erroLogin" style="color: #ff3c3c; display: none;">Usuário ou senha inválidos</p>
+  </div>
+
+  <!-- Painel principal -->
+  <div id="painelPrincipal" style="display: none;">
+
+    <!-- Informações do usuário no topo direito -->
+    <div id="usuarioInfo">
+      <img id="fotoTopo" src="https://via.placeholder.com/50" alt="Foto de perfil" />
+      <span id="iconeNivel">👤</span>
+      <strong id="nomeUsuario">Leon</strong>
+      <span id="nivelUsuario">(Nível X)</span>
+      <button type="button" id="logout">Sair</button>
+    </div>
+
+    <!-- Abas de navegação -->
+    <div class="abas">
+      <button type="button" class="aba ativa" data-alvo="cadastro">Cadastro</button>
+      <button type="button" class="aba" data-alvo="graficos">Gráficos</button>
+      <button type="button" class="aba" data-alvo="tabela">Tabela</button>
+      <button type="button" class="aba" data-alvo="relatorios">Relatórios</button>
+      <button type="button" class="aba" data-alvo="usuarios">Usuários</button>
+      <button type="button" class="aba" data-alvo="perfil">Perfil</button>
+      <button type="button" id="alternarTema">🌙 Modo Escuro</button>
+    </div>
+
+    <!-- Seção: Cadastro -->
+    <div class="conteudo-aba ativa" id="cadastro">
+      <div class="card">
+        <h2>Adicionar Novo Produto</h2>
+        <form id="formProduto">
+          <input type="text" id="produto" placeholder="Nome do produto" required />
+          <input type="number" id="quantidade" placeholder="Quantidade vendida" required />
+          <input type="date" id="dataVenda" required />
+          <input type="number" id="estoque" placeholder="Estoque atual" required />
+          <button type="submit">Adicionar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Seção: Gráficos -->
+    <div class="conteudo-aba" id="graficos">
+      <div class="card graficos-duplos">
+        <div class="grafico">
+          <h2>Gráfico de Giro</h2>
+          <canvas id="graficoGiro"></canvas>
+        </div>
+        <div class="grafico">
+          <h2>Previsão de Vendas</h2>
+          <canvas id="graficoPrevisao"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção: Tabela -->
+    <div class="conteudo-aba" id="tabela">
+      <div class="card tabela">
+        <h2>Tabela de Produtos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade Vendida</th>
+              <th>Última Venda</th>
+              <th>Estoque</th>
+              <th>Previsão (dias)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaCorpo">
+            <!-- Dados via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seção: Relatórios -->
+    <div class="conteudo-aba" id="relatorios">
+      <div class="card">
+        <h2>Filtros</h2>
+        <div class="filtros" id="filtros">
+          <input type="text" id="filtroNome" placeholder="Buscar por nome" />
+          <input type="date" id="filtroData" />
+          <button type="button" id="aplicarFiltros">Aplicar Filtros</button>
+          <button type="button" id="limparFiltros">Limpar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Exportar Relatórios</h2>
+        <button type="button" id="exportarCSV">Exportar para Excel</button>
+        <button type="button" id="exportarPDF">Exportar para PDF</button>
+      </div>
+    </div>
+
+    <!-- Seção: Cadastro de Usuários -->
+    <div class="conteudo-aba" id="usuarios">
+      <div class="card">
+        <h2>Cadastrar Novo Usuário</h2>
+        <form id="formNovoUsuario">
+          <input type="text" id="novoUsuario" placeholder="Nome de usuário" required />
+          <input type="password" id="novaSenha" placeholder="Senha" required />
+          <select id="nivelNovoUsuario" required>
+            <option value="">Selecione o nível</option>
+            <option value="1">Desenvolvedor</option>
+            <option value="2">Gestor</option>
+            <option value="3">Funcionário</option>
+          </select>
+          <button type="submit">Cadastrar</button>
+        </form>
+        <p id="cadastroStatus" style="margin-top: 10px;"></p>
+      </div>
+    </div>
+
+    <!-- Seção: Perfil do Usuário -->
+    <div class="conteudo-aba" id="perfil">
+      <div class="card">
+        <h2>Editar Perfil</h2>
+        <form id="formPerfil">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img id="fotoPreview" src="https://via.placeholder.com/100" alt="Foto de perfil" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" />
+            <br />
+            <input type="file" id="fotoPerfil" accept="image/*" />
+          </div>
+          <input type="text" id="nomePerfil" placeholder="Nome completo" required />
+          <input type="email" id="emailPerfil" placeholder="E-mail" required />
+          <input type="tel" id="telefonePerfil" placeholder="Telefone" required />
+          <button type="submit">Salvar Alterações</button>
+        </form>
+        <p id="statusPerfil" style="margin-top: 10px;"></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Leon • Painel de Giro de Itens</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
