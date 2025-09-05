@@ -6,8 +6,9 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  color: #333;
+  color: #f0f0f0;
   position: relative;
+  background-color: #1e1e1e;
 }
 
 /* Camada escura atrás do login */
@@ -25,9 +26,58 @@ body.logado::before {
   display: none;
 }
 
+/* Tema claro ativado */
+body.claro {
+  background-color: #f4f6f9;
+  color: #333;
+}
+
+/* Cartões no tema escuro */
+body:not(.claro) .card {
+  background-color: #2c2c2c;
+  color: #f0f0f0;
+}
+
+/* Cartões no tema claro */
+body.claro .card {
+  background-color: white;
+  color: #333;
+}
+
+/* Tabela no tema escuro */
+body:not(.claro) table {
+  background-color: #2c2c2c;
+  color: #f0f0f0;
+}
+
+body:not(.claro) th,
+body:not(.claro) td {
+  border-color: #444;
+}
+
+/* Tabela no tema claro */
+body.claro table {
+  background-color: white;
+  color: #333;
+}
+
+body.claro th,
+body.claro td {
+  border-color: #ddd;
+}
+
+/* Rodapé no tema escuro */
+body:not(.claro) footer {
+  color: #aaa;
+}
+
+/* Rodapé no tema claro */
+body.claro footer {
+  color: #666;
+}
+
 /* Cartões visuais */
 .card {
-  background-color: white;
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -149,20 +199,20 @@ button:hover {
 
 /* Botão de logout compacto */
 #logout {
-  padding: 5px 1px;
-  font-size: 12px;
-  background-color: #0078D4;
+  width: auto !important;
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: #e74c3c;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   color: white;
   cursor: pointer;
-  height: 28px;
   line-height: 1;
   transition: background-color 0.3s ease;
 }
 
 #logout:hover {
-  background-color: #0078D4;
+  background-color: #c0392b;
 }
 
 /* Conteúdo das abas */
@@ -192,24 +242,4 @@ footer {
   text-align: center;
   padding: 20px;
   font-size: 14px;
-  color: #666;
 }
-
-/* Corrige largura do botão de logout */
-#logout {
-  width: auto !important;
-  padding: 6px 12px;
-  font-size: 13px;
-  background-color: #0078D4;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-  line-height: 1;
-  transition: background-color 0.3s ease;
-}
-
-#logout:hover {
-  background-color: #0078D4;
-}
-
