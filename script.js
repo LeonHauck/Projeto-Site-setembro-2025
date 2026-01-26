@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       datasets: [{
         label: 'Dias para vender estoque',
         data: dados.map(item => item.diasEstimados),
-        backgroundColor: '#333',
+        backgroundColor: '#FFFFFF',
         borderRadius: 10
       }]
     },
@@ -198,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Calcula quantidade sugerida (quantidade vendida por semana * 2)
       const quantidadeSugerida = Math.ceil(item.quantidade / 7 * 2);
       const caixasSugeridas = Math.ceil(quantidadeSugerida / item.unidadesCaixa);
+      const unidadesReaisDoPedido = caixasSugeridas * item.unidadesCaixa;
       const estoqueCaixas = Math.ceil(item.estoque / item.unidadesCaixa);
 
       const sugestaoHTML = `
@@ -230,7 +231,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           
           <div class="sugestao-recomendacao">
-            <strong>Sugestão:</strong> Pedir <strong>${caixasSugeridas} caixas</strong> (${quantidadeSugerida} unidades)
+            <strong>Sugestão:</strong> Pedir <strong>${caixasSugeridas} caixas</strong> (${unidadesReaisDoPedido} itens) <br>
+            <small style="color: #42A5F5;">(Demanda real: ${quantidadeSugerida} itens)</small>
           </div>
         </div>
       `;
@@ -329,6 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
     vendasPeriodo.forEach(venda => {
       const quantidadeSugerida = Math.ceil(venda.quantidade / 7 * 2);
       const caixasSugeridas = Math.ceil(quantidadeSugerida / venda.unidadesCaixa);
+      const unidadesReaisDoPedido = caixasSugeridas * venda.unidadesCaixa;
 
       let urgencia = 'Normal';
       if (venda.diasEstimados <= 7) urgencia = 'Urgente';
@@ -345,7 +348,8 @@ document.addEventListener("DOMContentLoaded", () => {
         'Dias de Estoque': venda.diasEstimados,
         'Urgência': urgencia,
         'Caixas Sugeridas': caixasSugeridas,
-        'Unidades Sugeridas': quantidadeSugerida
+        'Unidades da Caixa': unidadesReaisDoPedido,
+        'Demanda Real': quantidadeSugerida
       });
     });
 
@@ -360,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       { wch: 15 },
       { wch: 15 },
       { wch: 12 },
+      { wch: 18 },
       { wch: 18 },
       { wch: 18 }
     ];
@@ -477,6 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     vendasPeriodo.forEach(venda => {
       const quantidadeSugerida = Math.ceil(venda.quantidade / 7 * 2);
       const caixasSugeridas = Math.ceil(quantidadeSugerida / venda.unidadesCaixa);
+      const unidadesReaisDoPedido = caixasSugeridas * venda.unidadesCaixa;
 
       let urgencia = 'Normal';
       if (venda.diasEstimados <= 7) urgencia = 'URGENTE';
@@ -486,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
         venda.produto,
         venda.diasEstimados.toString(),
         venda.quantidade.toString(),
-        caixasSugeridas.toString(),
+        caixasSugeridas.toString() + ` (${unidadesReaisDoPedido} un.) \n[Demanda: ${quantidadeSugerida}]`,
         urgencia
       ]);
     });
