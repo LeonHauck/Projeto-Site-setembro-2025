@@ -731,14 +731,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const reader = new FileReader();
           reader.onload = function (e) {
-            document.getElementById('fotoPreview').src = e.target.result;
-            document.getElementById('fotoTopo').src = e.target.result;
+            // Resize image to avoid localStorage quota limits
+            const img = new Image();
+            img.onload = function () {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
 
-            // Salva automaticamente
-            const perfil = localStorage.getItem(`perfil_${usuarioLogado.usuario}`);
-            const perfilObj = perfil ? JSON.parse(perfil) : { nome: '', email: '', telefone: '' };
-            perfilObj.foto = e.target.result;
-            localStorage.setItem(`perfil_${usuarioLogado.usuario}`, JSON.stringify(perfilObj));
+              // Define max dimensions (e.g. 300x300 for avatars)
+              const MAX_WIDTH = 300;
+              const MAX_HEIGHT = 300;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+              document.getElementById('fotoPreview').src = resizedDataUrl;
+              document.getElementById('fotoTopo').src = resizedDataUrl;
+
+              // Salva automaticamente
+              const perfil = localStorage.getItem(`perfil_${usuarioLogado.usuario}`);
+              const perfilObj = perfil ? JSON.parse(perfil) : { nome: '', email: '', telefone: '' };
+              perfilObj.foto = resizedDataUrl;
+              try {
+                localStorage.setItem(`perfil_${usuarioLogado.usuario}`, JSON.stringify(perfilObj));
+              } catch (err) {
+                console.error("Erro ao salvar perfil (provavelmente imagem muito grande):", err);
+                alert("A imagem selecionada é muito grande para salvar no navegador. Tente uma menor.");
+              }
+            };
+            img.src = e.target.result;
           };
           reader.readAsDataURL(file);
         }
