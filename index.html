@@ -4,21 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel de Giro de Itens</title>
+  <title>Login - Giro de Itens</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Bibliotecas Locais -->
-  <script src="libs/chart.js"></script>
-  <script src="libs/jspdf.umd.min.js"></script>
-  <script src="libs/xlsx.full.min.js"></script>
-  <script src="libs/jspdf.plugin.autotable.min.js"></script>
-
   <script src="script.js"></script>
 </head>
 
 <body>
-
-  <!-- Tela de Login -->
   <div id="telaLogin" class="tela-login-container">
     <div class="login-card">
       <div class="login-header">
@@ -31,13 +23,19 @@
 
       <form id="formLogin" class="login-form">
         <div class="input-group">
-          <i class="fas fa-user"></i>
-          <input type="text" id="usuario" placeholder="Usuário" required />
+          <label for="usuario">Usuário</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" id="usuario" placeholder="Digite seu usuário..." required />
+          </div>
         </div>
 
         <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" id="senha" placeholder="Senha" required />
+          <label for="senha">Senha</label>
+          <div class="input-wrapper">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="senha" placeholder="Digite sua senha..." required />
+          </div>
         </div>
 
         <button type="submit" class="btn-login">
@@ -54,341 +52,6 @@
         <small>dev / dev123 | gestor / gestor123 | func / func123</small>
       </div>
     </div>
-  </div>
-
-  <!-- Painel principal -->
-  <div id="painelPrincipal" style="display: none;">
-
-    <!-- Header com informações do usuário -->
-    <header class="header-principal">
-      <div class="header-left">
-        <div class="logo-principal">
-          <i class="fas fa-chart-line"></i>
-          <span>Giro de Itens</span>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <button type="button" id="alternarTema" class="btn-tema" title="Alternar tema">
-          <i class="fas fa-moon"></i>
-        </button>
-
-        <div id="usuarioInfo" class="usuario-info">
-          <img id="fotoTopo"
-            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJCNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTQuMmMtMi41IDAtNC43MS0xLjI4LTYtMy4yMi4wMy0xLjk5IDQtMy4wOCA2LTMuMDggMS45OSAwIDUuOTcgMS4wOSA2IDMuMDgtMS4yOSAxLjk0LTMuNSAzLjIyLTYgMy4yMnoiLz48L3N2Zz4="
-            alt="Foto de perfil" />
-          <div class="usuario-details">
-            <strong id="nomeUsuario">Leon</strong>
-            <small id="nivelUsuario">(Nível X)</small>
-          </div>
-          <button type="button" id="logout" class="btn-logout" title="Sair da aplicação">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Barra de navegação com abas -->
-    <nav class="nav-abas">
-      <button type="button" class="aba ativa" data-alvo="cadastro">
-        <i class="fas fa-plus-circle"></i> Cadastro
-      </button>
-      <button type="button" class="aba" data-alvo="graficos">
-        <i class="fas fa-chart-bar"></i> Gráficos
-      </button>
-      <button type="button" class="aba" data-alvo="tabela">
-        <i class="fas fa-table"></i> Tabela
-      </button>
-      <button type="button" class="aba" data-alvo="relatorios">
-        <i class="fas fa-file-alt"></i> Relatórios
-      </button>
-      <button type="button" class="aba" data-alvo="usuarios">
-        <i class="fas fa-users"></i> Usuários
-      </button>
-      <button type="button" class="aba" data-alvo="perfil">
-        <i class="fas fa-user-cog"></i> Perfil
-      </button>
-    </nav>
-
-    <!-- Container principal -->
-    <div class="container-principal">
-
-      <!-- Seção: Cadastro -->
-      <div class="conteudo-aba ativa" id="cadastro">
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-plus"></i> Adicionar Novo Produto</h2>
-            <p>Registre um novo produto no sistema</p>
-          </div>
-          <form id="formProduto" class="form-grid">
-            <div class="form-group">
-              <label for="produto"><i class="fas fa-box"></i> Nome do Produto</label>
-              <input type="text" id="produto" placeholder="Ex: Notebook" required />
-            </div>
-
-            <div class="form-group">
-              <label for="quantidade"><i class="fas fa-cubes"></i> Quantidade Vendida</label>
-              <input type="number" id="quantidade" placeholder="Quantidade" required />
-            </div>
-
-            <div class="form-group">
-              <label for="unidadesCaixa"><i class="fas fa-box-open"></i> Unidades por Caixa</label>
-              <input type="number" id="unidadesCaixa" placeholder="Ex: 12" min="1" value="1" required />
-            </div>
-
-            <div class="form-group">
-              <label for="dataVenda"><i class="fas fa-calendar-alt"></i> Data da Venda</label>
-              <input type="date" id="dataVenda" required />
-            </div>
-
-            <div class="form-group">
-              <label for="estoque"><i class="fas fa-warehouse"></i> Estoque Atual</label>
-              <input type="number" id="estoque" placeholder="Estoque" required />
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full">
-              <i class="fas fa-check"></i> Adicionar Produto
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Seção: Gráficos -->
-      <div class="conteudo-aba" id="graficos">
-        <div class="graficos-container">
-          <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-chart-bar"></i> Gráfico de Giro (em Unidades)</h2>
-              <p>Quantidade de itens vendidos por produto</p>
-            </div>
-            <canvas id="graficoGiro"></canvas>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-hourglass-end"></i> Previsão de Vendas (em Dias)</h2>
-              <p>Estimativa de dias para esgotar estoque</p>
-            </div>
-            <canvas id="graficoPrevisao"></canvas>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-lightbulb"></i> Sugestões de Pedidos</h2>
-            <p>Recomendações baseadas na saída de vendas</p>
-          </div>
-          <div id="sugestoesPedidos" class="sugestoes-container">
-            <!-- Sugestões geradas dinamicamente -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Seção: Tabela -->
-      <div class="conteudo-aba" id="tabela">
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-table"></i> Tabela de Produtos</h2>
-            <p>Visualize todos os produtos cadastrados</p>
-          </div>
-          <div class="table-responsive">
-            <table class="tabela-produtos">
-              <thead>
-                <tr>
-                  <th><i class="fas fa-box"></i> Produto</th>
-                  <th><i class="fas fa-cubes"></i> Qtd. Vendida</th>
-                  <th><i class="fas fa-box-open"></i> Un. por Caixa</th>
-                  <th><i class="fas fa-calendar"></i> Última Venda</th>
-                  <th><i class="fas fa-warehouse"></i> Estoque</th>
-                  <th><i class="fas fa-boxes"></i> Caixas</th>
-                  <th><i class="fas fa-clock"></i> Previsão (dias)</th>
-                  <th><i class="fas fa-tools"></i> Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tabelaCorpo">
-                <!-- Dados via JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal de Edição de Produtos -->
-      <div id="modalEditarProduto" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2><i class="fas fa-edit"></i> Editar Produto</h2>
-            <button type="button" class="btn-fechar-modal" id="btnFecharModal">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-
-          <form id="formEditarProduto" class="form-grid">
-            <div class="form-group">
-              <label for="editProduto"><i class="fas fa-box"></i> Nome do Produto</label>
-              <input type="text" id="editProduto" placeholder="Nome do produto" required />
-            </div>
-
-            <div class="form-group">
-              <label for="editQuantidade"><i class="fas fa-cubes"></i> Quantidade Vendida</label>
-              <input type="number" id="editQuantidade" placeholder="Quantidade" required />
-            </div>
-
-            <div class="form-group">
-              <label for="editUnidadesCaixa"><i class="fas fa-box-open"></i> Unidades por Caixa</label>
-              <input type="number" id="editUnidadesCaixa" placeholder="Unidades por caixa" min="1" required />
-            </div>
-
-            <div class="form-group">
-              <label for="editDataVenda"><i class="fas fa-calendar-alt"></i> Data da Venda</label>
-              <input type="date" id="editDataVenda" required />
-            </div>
-
-            <div class="form-group">
-              <label for="editEstoque"><i class="fas fa-warehouse"></i> Estoque Atual</label>
-              <input type="number" id="editEstoque" placeholder="Estoque" required />
-            </div>
-
-            <div class="modal-buttons">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Salvar Alterações
-              </button>
-              <button type="button" class="btn btn-secondary" id="btnCancelarEdicao">
-                <i class="fas fa-times"></i> Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <div class="conteudo-aba" id="relatorios">
-        <div class="relatorios-grid">
-          <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-filter"></i> Filtros</h2>
-              <p>Filtrar produtos por nome ou data</p>
-            </div>
-            <div class="filtros-container">
-              <div class="form-group">
-                <label for="filtroNome"><i class="fas fa-search"></i> Buscar por Nome</label>
-                <input type="text" id="filtroNome" placeholder="Digite o nome do produto" />
-              </div>
-
-              <div class="form-group">
-                <label for="filtroData"><i class="fas fa-calendar-alt"></i> Data</label>
-                <input type="date" id="filtroData" />
-              </div>
-
-              <div class="filtros-buttons">
-                <button type="button" id="aplicarFiltros" class="btn btn-primary">
-                  <i class="fas fa-check"></i> Aplicar
-                </button>
-                <button type="button" id="limparFiltros" class="btn btn-secondary">
-                  <i class="fas fa-redo"></i> Limpar
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-download"></i> Exportar Dados</h2>
-              <p>Exporte relatórios em diferentes formatos</p>
-            </div>
-            <div class="export-buttons">
-              <button type="button" id="exportarCSV" class="btn btn-success">
-                <i class="fas fa-file-csv"></i> Excel / CSV
-              </button>
-              <button type="button" id="exportarPDF" class="btn btn-danger">
-                <i class="fas fa-file-pdf"></i> PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Seção: Cadastro de Usuários -->
-      <div class="conteudo-aba" id="usuarios">
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-user-plus"></i> Cadastrar Novo Usuário</h2>
-            <p>Adicione novos usuários ao sistema</p>
-          </div>
-          <form id="formNovoUsuario" class="form-grid">
-            <div class="form-group">
-              <label for="novoUsuario"><i class="fas fa-user"></i> Nome de Usuário</label>
-              <input type="text" id="novoUsuario" placeholder="Digite o nome de usuário" required />
-            </div>
-
-            <div class="form-group">
-              <label for="novaSenha"><i class="fas fa-lock"></i> Senha</label>
-              <input type="password" id="novaSenha" placeholder="Digite a senha" required />
-            </div>
-
-            <div class="form-group">
-              <label for="nivelNovoUsuario"><i class="fas fa-shield-alt"></i> Nível de Acesso</label>
-              <select id="nivelNovoUsuario" required>
-                <option value="">Selecione o nível</option>
-                <option value="1">👨‍💻 Desenvolvedor</option>
-                <option value="2">👔 Gestor</option>
-                <option value="3">👷 Funcionário</option>
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full">
-              <i class="fas fa-check"></i> Cadastrar Usuário
-            </button>
-          </form>
-          <p id="cadastroStatus" class="status-message"></p>
-        </div>
-      </div>
-
-      <!-- Seção: Perfil do Usuário -->
-      <div class="conteudo-aba" id="perfil">
-        <div class="card">
-          <div class="card-header">
-            <h2><i class="fas fa-user-edit"></i> Editar Perfil</h2>
-            <p>Atualize suas informações pessoais</p>
-          </div>
-          <form id="formPerfil" class="form-perfil">
-            <div class="foto-upload-container">
-              <img id="fotoPreview"
-                src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJCNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTQuMmMtMi41IDAtNC43MS0xLjI4LTYtMy4yMi4wMy0xLjk5IDQtMy4wOCA2LTMuMDggMS45OSAwIDUuOTcgMS4wOSA2IDMuMDgtMS4yOSAxLjk0LTMuNSAzLjIyLTYgMy4yMnoiLz48L3N2Zz4="
-                alt="Foto de perfil" class="foto-preview" />
-              <label for="fotoPerfil" class="btn btn-small btn-secondary">
-                <i class="fas fa-camera"></i> Trocar Foto
-              </label>
-              <input type="file" id="fotoPerfil" accept="image/*" style="display: none;" />
-            </div>
-
-            <div class="form-group">
-              <label for="nomePerfil"><i class="fas fa-user"></i> Nome Completo</label>
-              <input type="text" id="nomePerfil" placeholder="Digite seu nome completo" required />
-            </div>
-
-            <div class="form-group">
-              <label for="emailPerfil"><i class="fas fa-envelope"></i> E-mail</label>
-              <input type="email" id="emailPerfil" placeholder="seu@email.com" required />
-            </div>
-
-            <div class="form-group">
-              <label for="telefonePerfil"><i class="fas fa-phone"></i> Telefone</label>
-              <input type="tel" id="telefonePerfil" placeholder="(11) 99999-9999" required />
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-full">
-              <i class="fas fa-save"></i> Salvar Alterações
-            </button>
-          </form>
-          <p id="statusPerfil" class="status-message"></p>
-        </div>
-      </div>
-
-    </div><!-- Fecha container-principal -->
-
-    <footer class="footer-principal">
-      <p>&copy; 2025 Leon • <strong>Painel de Giro de Itens</strong></p>
-      <p style="font-size: 12px; margin-top: 5px;">Sistema de Gerenciamento de Estoque v1.0</p>
-    </footer>
   </div>
 </body>
 

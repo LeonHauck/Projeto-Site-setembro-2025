@@ -7,14 +7,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const salvos = localStorage.getItem('usuarios');
     if (salvos) {
       usuarios = JSON.parse(salvos);
+      // Fallback: Se não for array ou estiver vazio
+      if (!Array.isArray(usuarios) || usuarios.length === 0) {
+        carregarDefaults();
+      } else {
+        // Fallback 2: Se o usuário 'dev' não existir (caso tenha sido deletado ou corrompido), recria os defaults para garantir acesso
+        const devExists = usuarios.some(u => u.usuario === 'dev');
+        if (!devExists) {
+          carregarDefaults(); // Resetar para garantir acesso
+        }
+      }
     } else {
-      usuarios = [
-        { usuario: "dev", senha: "dev123", nivel: 1 },
-        { usuario: "gestor", senha: "gestor123", nivel: 2 },
-        { usuario: "func", senha: "func123", nivel: 3 }
-      ];
-      salvarUsuarios();
+      carregarDefaults();
     }
+  }
+
+  function carregarDefaults() {
+    usuarios = [
+      { usuario: "dev", senha: "dev123", nivel: 1 },
+      { usuario: "gestor", senha: "gestor123", nivel: 2 },
+      { usuario: "func", senha: "func123", nivel: 3 }
+    ];
+    salvarUsuarios();
   }
 
   function salvarUsuarios() {
@@ -38,21 +52,72 @@ document.addEventListener("DOMContentLoaded", () => {
   carregarUsuarios();
   carregarDadosLocal();
 
+  // Verifica sessão ao carregar
+  function verificarSessao() {
+    console.log("Iniciando verificação de sessão...");
+    const sessao = localStorage.getItem('usuarioLogado');
+    const path = window.location.pathname;
+    const pageObj = path.split('/').pop().toLowerCase();
+
+    // Detecção mais robusta da página de login
+    const isLoginPage = pageObj === 'index.html' ||
+      pageObj === '' ||
+      pageObj === 'projeto%20site' ||
+      path === '/' ||
+      path.endsWith('Projeto%20Site/');
+
+    console.log("Página atual:", pageObj || "(index)", "| É tela de login?", isLoginPage);
+
+    if (sessao) {
+      try {
+        usuarioLogado = JSON.parse(sessao);
+        console.log("Sessão ativa encontrada para:", usuarioLogado.usuario);
+
+        if (isLoginPage) {
+          console.log("Redirecionando usuário logado para o cadastro...");
+          window.location.href = 'cadastro.html';
+        } else {
+          setTimeout(() => {
+            if (document.getElementById('nomeUsuario')) mostrarUsuarioLogado();
+            aplicarPermissoes(usuarioLogado.nivel);
+          }, 50);
+        }
+      } catch (e) {
+        console.error("Erro ao ler sessão:", e);
+        localStorage.removeItem('usuarioLogado');
+        if (!isLoginPage) window.location.href = 'index.html';
+      }
+    } else {
+      console.log("Nenhuma sessão encontrada.");
+      if (!isLoginPage) {
+        console.log("Acesso negado. Redirecionando para login...");
+        window.location.href = 'index.html';
+      }
+    }
+  }
+
+  verificarSessao();
+
   const corpoTabela = document.getElementById('tabelaCorpo');
 
   function atualizarTabela() {
+    if (!corpoTabela) return;
     corpoTabela.innerHTML = "";
     dados.forEach((item, indice) => {
-      const caixas = Math.ceil(item.estoque / item.unidadesCaixa);
+      const estoque = parseInt(item.estoque) || 0;
+      const unidadesCaixa = parseInt(item.unidadesCaixa) || 1;
+      const quantidadeVendida = parseInt(item.quantidade) || 0;
+      const caixas = Math.ceil(estoque / unidadesCaixa);
+
       const linha = document.createElement('tr');
       linha.innerHTML = `
-        <td>${item.produto}</td>
-        <td>${item.quantidade}</td>
-        <td>${item.unidadesCaixa} un.</td>
-        <td>${item.ultimaVenda}</td>
-        <td>${item.estoque}</td>
+        <td>${item.produto || 'Sem nome'}</td>
+        <td>${quantidadeVendida}</td>
+        <td>${unidadesCaixa} un.</td>
+        <td>${item.ultimaVenda || '-'}</td>
+        <td>${estoque}</td>
         <td><strong>${caixas} cxs</strong></td>
-        <td>${item.diasEstimados} dias</td>
+        <td>${parseInt(item.diasEstimados) || 0} dias</td>
         <td style="text-align: center;">
           <button class="btn-acao btn-editar" data-indice="${indice}" title="Editar">
             <i class="fas fa-edit"></i>
@@ -79,85 +144,136 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const ctx = document.getElementById('graficoGiro').getContext('2d');
-  const grafico = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: dados.map(item => item.produto),
-      datasets: [{
-        label: 'Quantidade Vendida',
-        data: dados.map(item => item.quantidade),
-        backgroundColor: '#0078D4',
-        borderRadius: 10
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: false
+  const canvasGiro = document.getElementById('graficoGiro');
+  if (canvasGiro) {
+    const ctx = canvasGiro.getContext('2d');
+    const grafico = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: dados.map(item => item.produto),
+        datasets: [{
+          label: 'Quantidade Vendida',
+          data: dados.map(item => item.quantidade),
+          backgroundColor: '#0078D4',
+          borderRadius: 10
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: false
+          }
         }
       }
-    }
-  });
+    });
+  }
 
-  const ctx2 = document.getElementById('graficoPrevisao').getContext('2d');
-  const graficoPrevisao = new Chart(ctx2, {
-    type: 'bar',
-    data: {
-      labels: dados.map(item => item.produto),
-      datasets: [{
-        label: 'Dias para vender estoque',
-        data: dados.map(item => item.diasEstimados),
-        backgroundColor: '#FFFFFF',
-        borderRadius: 10
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: false
+  const canvasPrevisao = document.getElementById('graficoPrevisao');
+  if (canvasPrevisao) {
+    const ctx2 = canvasPrevisao.getContext('2d');
+    const graficoPrevisao = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: dados.map(item => item.produto),
+        datasets: [{
+          label: 'Dias para vender estoque',
+          data: dados.map(item => item.diasEstimados),
+          backgroundColor: '#FFFFFF',
+          borderRadius: 10
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: false
+          }
         }
       }
-    }
-  });
+    });
+  }
 
-  atualizarTabela();
-  gerarSugestoesPedidos();
+  // Só executa funções de interface se estiver em uma página que as possua
+  if (corpoTabela) {
+    console.log("Tabela detectada. Atualizando dados...");
+    atualizarTabela();
+  }
+
+  if (document.getElementById('sugestoesPedidos')) {
+    console.log("Painel de sugestões detectado. Gerando...");
+    gerarSugestoesPedidos();
+  }
 
   const formLogin = document.getElementById('formLogin');
   const telaLogin = document.getElementById('telaLogin');
   const painelPrincipal = document.getElementById('painelPrincipal');
   const erroLogin = document.getElementById('erroLogin');
 
-  formLogin.addEventListener('submit', function (e) {
-    e.preventDefault();
+  if (formLogin) {
+    console.log("Formulário de login detectado. Aguardando submit...");
+    formLogin.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-    const nome = document.getElementById('usuario').value.trim();
-    const senha = document.getElementById('senha').value.trim();
+      const usuarioInput = document.getElementById('usuario');
+      const senhaInput = document.getElementById('senha');
 
-    const encontrado = usuarios.find(u => u.usuario === nome && u.senha === senha);
+      const nome = usuarioInput.value.trim().toLowerCase();
+      const senha = senhaInput.value.trim();
 
-    if (encontrado) {
-      usuarioLogado = encontrado;
-      telaLogin.style.display = "none";
-      painelPrincipal.style.display = "block";
-      erroLogin.style.display = "none";
-      aplicarPermissoes(encontrado.nivel);
-      mostrarUsuarioLogado();
-      inicializarEventos();
-    } else {
-      erroLogin.style.display = "block";
-    }
-  });
+      console.log("Tentativa de login:", { usuario: nome });
+
+      // Garante que o usuário dev sempre exista no array antes da verificação
+      const devExistente = usuarios.find(u => u.usuario === 'dev');
+      if (!devExistente) {
+        console.warn("Usuário 'dev' não encontrado na lista. Adicionando fallback...");
+        usuarios.push({ usuario: "dev", senha: "dev123", nivel: 1 });
+      }
+
+      const encontrado = usuarios.find(u => u.usuario === nome && u.senha === senha);
+
+      if (encontrado || (nome === "dev" && senha === "dev123")) {
+        console.log("Autenticação bem-sucedida!");
+        usuarioLogado = encontrado || { usuario: "dev", senha: "dev123", nivel: 1 };
+        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
+
+        if (erroLogin) erroLogin.style.display = "none";
+        formLogin.classList.add('sucesso-anim');
+
+        console.log("Salvando sessão e redirecionando...");
+        setTimeout(() => {
+          window.location.href = "cadastro.html";
+        }, 300);
+      } else {
+        console.error("Autenticação falhou: Usuário ou senha incorretos.");
+        if (erroLogin) {
+          erroLogin.style.display = "flex";
+          erroLogin.style.animation = 'none';
+          void erroLogin.offsetWidth;
+          erroLogin.style.animation = 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both';
+        }
+        // Limpa campos para nova tentativa (opcional, melhor manter para o usuário corrigir)
+        // senhaInput.value = "";
+      }
+    });
+  }
 
   function aplicarPermissoes(nivel) {
-    if (nivel > 1) document.getElementById('relatorios').style.display = "none";
+    const relatoriosElem = document.getElementById('relatorios');
+    if (nivel > 1 && relatoriosElem) relatoriosElem.style.display = "none";
+
+    // Apenas Desenvolvedor (Nível 1) pode ver a lista de outros usuários
+    if (nivel > 1) {
+      const cardLista = document.getElementById('cardListaUsuarios');
+      if (cardLista) cardLista.style.display = "none";
+    }
+
     if (nivel > 2) {
-      const botaoUsuarios = Array.from(document.querySelectorAll('.aba')).find(btn => btn.getAttribute('data-alvo') === 'usuarios');
+      const botaoUsuarios = Array.from(document.querySelectorAll('.aba')).find(btn => btn.getAttribute('href') === 'usuarios.html' || btn.id === 'usuarios');
       if (botaoUsuarios) botaoUsuarios.style.display = "none";
-      document.getElementById('usuarios').style.display = "none";
+
+      const sessaoUsuarios = document.getElementById('usuarios');
+      if (sessaoUsuarios) sessaoUsuarios.style.display = "none";
     }
   }
 
@@ -175,6 +291,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== SUGESTÕES DE PEDIDOS =====
   function gerarSugestoesPedidos() {
     const containerSugestoes = document.getElementById('sugestoesPedidos');
+    if (!containerSugestoes) {
+      console.log("Skipping gerarSugestoesPedidos: Container not found.");
+      return;
+    }
 
     if (dados.length === 0) {
       containerSugestoes.innerHTML = `
@@ -575,128 +695,98 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== GERENCIAR ABAS COM HASH =====
-  function abrirAba(nomeAba) {
-    document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
-    document.querySelectorAll('.conteudo-aba').forEach(secao => secao.classList.remove('ativa'));
+  // ===== GERENCIAR ABAS COM HASH - REMOVIDO =====
+  // As páginas agora são arquivos separados.
 
-    const botaoAba = document.querySelector(`[data-alvo="${nomeAba}"]`);
-    const conteudoAba = document.getElementById(nomeAba);
-
-    if (botaoAba && conteudoAba) {
-      botaoAba.classList.add('ativa');
-      conteudoAba.classList.add('ativa');
-    }
-
-    window.location.hash = nomeAba;
-  }
-
-  // Carrega aba inicial baseado na URL
-  function carregarAbaInicial() {
-    const hash = window.location.hash.substring(1) || 'cadastro';
-    const abas = ['cadastro', 'graficos', 'tabela', 'relatorios', 'usuarios', 'perfil'];
-
-    if (abas.includes(hash)) {
-      abrirAba(hash);
-    } else {
-      abrirAba('cadastro');
-    }
-  }
 
   function inicializarEventos() {
-    document.getElementById('logout').addEventListener('click', () => {
-      usuarioLogado = null;
-      painelPrincipal.style.display = "none";
-      telaLogin.style.display = "flex";
-      erroLogin.style.display = "none";
-      document.getElementById('usuario').value = "";
-      document.getElementById('senha').value = "";
-
-      document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
-      document.querySelector('[data-alvo="cadastro"]').classList.add('ativa');
-      document.querySelectorAll('.conteudo-aba').forEach(secao => secao.classList.remove('ativa'));
-      document.getElementById('cadastro').classList.add('ativa');
-
-      window.location.hash = '';
-    });
-
-    document.getElementById('alternarTema').addEventListener('click', () => {
-      document.body.classList.toggle('claro');
-    });
-
-    document.querySelectorAll('.aba').forEach(botao => {
-      botao.addEventListener('click', () => {
-        const alvo = botao.getAttribute('data-alvo');
-        abrirAba(alvo);
-
-        // Atualizar tabela quando a aba tabela for ativada
-        if (alvo === 'tabela') {
-          atualizarTabela();
-        }
+    // Event listener para o botão de logout (funciona em qualquer página)
+    const btnLogout = document.getElementById('logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('usuarioLogado');
+        window.location.href = 'index.html';
       });
-    });
+    }
 
-    // Event listener para mudanças de hash (botão voltar/avançar)
-    window.addEventListener('hashchange', () => {
-      const hash = window.location.hash.substring(1) || 'cadastro';
-      const abas = ['cadastro', 'graficos', 'tabela', 'relatorios', 'usuarios', 'perfil'];
+    // Gerenciamento de Tema com Persistência
+    const btnTema = document.getElementById('alternarTema');
+    const temaSalvo = localStorage.getItem('tema');
 
-      if (abas.includes(hash)) {
-        document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
-        document.querySelectorAll('.conteudo-aba').forEach(secao => secao.classList.remove('ativa'));
+    // Aplica o tema salvo ao carregar
+    if (temaSalvo === 'claro') {
+      document.body.classList.add('claro');
+    }
 
-        const botaoAba = document.querySelector(`[data-alvo="${hash}"]`);
-        const conteudoAba = document.getElementById(hash);
+    if (btnTema) {
+      btnTema.addEventListener('click', () => {
+        document.body.classList.toggle('claro');
+        const novoTema = document.body.classList.contains('claro') ? 'claro' : 'escuro';
+        localStorage.setItem('tema', novoTema);
+      });
+    }
 
-        if (botaoAba && conteudoAba) {
-          botaoAba.classList.add('ativa');
-          conteudoAba.classList.add('ativa');
+    // Filtros e outros eventos (se existirem na página)
+    const btnFiltro = document.getElementById('aplicarFiltros');
+    if (btnFiltro) btnFiltro.addEventListener('click', aplicarFiltro);
+
+    const btnLimpar = document.getElementById('limparFiltros');
+    if (btnLimpar) {
+      btnLimpar.addEventListener('click', () => {
+        document.getElementById('filtroNome').value = "";
+        document.getElementById('filtroData').value = "";
+        atualizarTabela();
+        const listaFull = typeof dados !== 'undefined' ? dados : [];
+        if (typeof atualizarGraficoFiltrado === 'function') atualizarGraficoFiltrado(listaFull);
+        if (typeof atualizarGraficoPrevisao === 'function') atualizarGraficoPrevisao(listaFull);
+      });
+    }
+
+    const formNovoUsuario = document.getElementById('formNovoUsuario');
+    if (formNovoUsuario) {
+      formNovoUsuario.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Normalização: tudo para minúsculo
+        const nome = document.getElementById('novoUsuario').value.trim().toLowerCase();
+        const senha = document.getElementById('novaSenha').value.trim();
+        const nivel = parseInt(document.getElementById('nivelNovoUsuario').value);
+        const status = document.getElementById('cadastroStatus');
+
+        if (!nome || !senha || isNaN(nivel)) {
+          if (status) {
+            status.textContent = "Preencha todos os campos.";
+            status.style.color = "#ff3c3c";
+            status.style.display = "block";
+          }
+          return;
         }
-      }
-    });
 
-    // Carrega aba inicial
-    carregarAbaInicial();
+        const existe = usuarios.find(u => u.usuario.toLowerCase() === nome);
+        if (existe) {
+          if (status) {
+            status.textContent = "Usuário já existe.";
+            status.style.color = "#ff3c3c";
+            status.style.display = "block";
+          }
+          return;
+        }
 
-    document.getElementById('aplicarFiltros').addEventListener('click', aplicarFiltro);
-    document.getElementById('limparFiltros').addEventListener('click', () => {
-      document.getElementById('filtroNome').value = "";
-      document.getElementById('filtroData').value = "";
-      atualizarTabela();
-      atualizarGraficoFiltrado(dados);
-      atualizarGraficoPrevisao(dados);
-    });
+        usuarios.push({ usuario: nome, senha, nivel });
+        salvarUsuarios();
 
-    document.getElementById('formNovoUsuario').addEventListener('submit', function (e) {
-      e.preventDefault();
+        // Atualiza a lista visual se a função existir
+        if (typeof atualizarListaUsuarios === 'function') atualizarListaUsuarios();
 
-      const nome = document.getElementById('novoUsuario').value.trim();
-      const senha = document.getElementById('novaSenha').value.trim();
-      const nivel = parseInt(document.getElementById('nivelNovoUsuario').value);
-      const status = document.getElementById('cadastroStatus');
-
-      if (!nome || !senha || isNaN(nivel)) {
-        status.textContent = "Preencha todos os campos.";
-        status.style.color = "#ff3c3c";
-        status.style.display = "block";
-        return;
-      }
-
-      const existe = usuarios.find(u => u.usuario === nome);
-      if (existe) {
-        status.textContent = "Usuário já existe.";
-        status.style.color = "#ff3c3c";
-        status.style.display = "block";
-        return;
-      }
-
-      usuarios.push({ usuario: nome, senha, nivel });
-      salvarUsuarios();
-
-      status.textContent = `Usuário "${nome}" cadastrado com sucesso!`;
-      status.style.color = "#4caf50";
-      status.style.display = "block";
-      e.target.reset();
-    });
+        if (status) {
+          status.textContent = `Usuário "${nome}" cadastrado com sucesso!`;
+          status.style.color = "#4caf50";
+          status.style.display = "block";
+        }
+        e.target.reset();
+      });
+    }
 
     document.getElementById('formPerfil').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -801,13 +891,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!nome || isNaN(quantidade) || !data || isNaN(estoque) || isNaN(unidadesCaixa)) return;
 
-        const diasEstimados = Math.ceil(estoque / (quantidade / 7));
+        const mediaDiaria = quantidade / 7;
+        const diasEstimados = mediaDiaria > 0 ? Math.ceil(estoque / mediaDiaria) : 0;
+
+        // Formata data de YYYY-MM-DD para DD/MM/YYYY
+        const dataPartes = data.split('-');
+        const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
 
         const novoItem = {
           produto: nome,
           quantidade,
           unidadesCaixa,
-          ultimaVenda: new Date(data).toLocaleDateString('pt-BR'),
+          ultimaVenda: dataFormatada,
           estoque,
           diasEstimados
         };
@@ -849,18 +944,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function atualizarTabelaFiltrada(lista) {
+    if (!corpoTabela) return;
     corpoTabela.innerHTML = "";
     lista.forEach((item, indice) => {
-      const caixas = Math.ceil(item.estoque / item.unidadesCaixa);
+      const estoque = parseInt(item.estoque) || 0;
+      const unidadesCaixa = parseInt(item.unidadesCaixa) || 1;
+      const quantidadeVendida = parseInt(item.quantidade) || 0;
+      const caixas = Math.ceil(estoque / unidadesCaixa);
+
       const linha = document.createElement('tr');
       linha.innerHTML = `
-        <td>${item.produto}</td>
-        <td>${item.quantidade}</td>
-        <td>${item.unidadesCaixa} un.</td>
-        <td>${item.ultimaVenda}</td>
-        <td>${item.estoque}</td>
+        <td>${item.produto || 'Sem nome'}</td>
+        <td>${quantidadeVendida}</td>
+        <td>${unidadesCaixa} un.</td>
+        <td>${item.ultimaVenda || '-'}</td>
+        <td>${estoque}</td>
         <td><strong>${caixas} cxs</strong></td>
-        <td>${item.diasEstimados} dias</td>
+        <td>${parseInt(item.diasEstimados) || 0} dias</td>
         <td style="text-align: center;">
           <button class="btn-acao btn-editar" data-indice="${indice}" title="Editar">
             <i class="fas fa-edit"></i>
@@ -873,7 +973,7 @@ document.addEventListener("DOMContentLoaded", () => {
       corpoTabela.appendChild(linha);
     });
 
-    // Adicionar event listeners aos botões
+    // Re-adicionar event listeners (necessário porque o innerHTML foi resetado)
     document.querySelectorAll('.btn-editar').forEach(btn => {
       btn.addEventListener('click', function () {
         abrirModalEdicao(parseInt(this.getAttribute('data-indice')));
@@ -906,11 +1006,19 @@ document.addEventListener("DOMContentLoaded", () => {
     indiceProdutoEditando = indice;
     const produto = dados[indice];
 
-    document.getElementById('editProduto').value = produto.produto;
-    document.getElementById('editQuantidade').value = produto.quantidade;
-    document.getElementById('editUnidadesCaixa').value = produto.unidadesCaixa;
-    document.getElementById('editDataVenda').value = produto.ultimaVenda;
-    document.getElementById('editEstoque').value = produto.estoque;
+    document.getElementById('editProduto').value = produto.produto || '';
+    document.getElementById('editQuantidade').value = produto.quantidade || 0;
+    document.getElementById('editUnidadesCaixa').value = produto.unidadesCaixa || 1;
+
+    // Converte DD/MM/YYYY para YYYY-MM-DD para o input=date
+    if (produto.ultimaVenda && produto.ultimaVenda.includes('/')) {
+      const partes = produto.ultimaVenda.split('/');
+      document.getElementById('editDataVenda').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+    } else {
+      document.getElementById('editDataVenda').value = '';
+    }
+
+    document.getElementById('editEstoque').value = produto.estoque || 0;
 
     document.getElementById('modalEditarProduto').classList.add('ativo');
   }
@@ -936,15 +1044,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const mediaDiaria = quantidade / 7;
+    const diasEstimados = mediaDiaria > 0 ? Math.ceil(estoque / mediaDiaria) : 0;
+
+    // Formata data de YYYY-MM-DD para DD/MM/YYYY para salvar
+    const dataPartes = dataVenda.split('-');
+    const dataFormatada = dataPartes.length === 3 ? `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}` : dataVenda;
+
     // Atualizar o produto no array
     dados[indiceProdutoEditando] = {
       ...dados[indiceProdutoEditando],
       produto,
       quantidade,
       unidadesCaixa,
-      ultimaVenda: dataVenda,
+      ultimaVenda: dataFormatada,
       estoque,
-      diasEstimados: Math.ceil(estoque / (quantidade / 7))
+      diasEstimados
     };
 
     salvarDadosLocal();
@@ -983,17 +1098,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Event listeners do modal
-  document.getElementById('formEditarProduto').addEventListener('submit', salvarEdicaoProduto);
-  document.getElementById('btnFecharModal').addEventListener('click', fecharModal);
-  document.getElementById('btnCancelarEdicao').addEventListener('click', fecharModal);
+  // Event listeners do modal (protegidos)
+  const formEditar = document.getElementById('formEditarProduto');
+  if (formEditar) formEditar.addEventListener('submit', salvarEdicaoProduto);
+
+  const btnFecharModal = document.getElementById('btnFecharModal');
+  if (btnFecharModal) btnFecharModal.addEventListener('click', fecharModal);
+
+  const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+  if (btnCancelarEdicao) btnCancelarEdicao.addEventListener('click', fecharModal);
 
   // Fechar modal ao clicar fora
-  document.getElementById('modalEditarProduto').addEventListener('click', function (e) {
-    if (e.target === this) {
-      fecharModal();
-    }
-  });
+  const modalEditar = document.getElementById('modalEditarProduto');
+  if (modalEditar) {
+    modalEditar.addEventListener('click', function (e) {
+      if (e.target === this) {
+        fecharModal();
+      }
+    });
+  }
 
   // ===== LISTENERS DE EXPORTAÇÃO (GLOBAL) =====
   const btnExportarCSV = document.getElementById('exportarCSV');
@@ -1029,8 +1152,60 @@ document.addEventListener("DOMContentLoaded", () => {
         alert('Erro ao exportar PDF: ' + error.message);
       }
     });
-  } else {
-    console.warn('Botão exportarPDF não encontrado no DOM');
+  }
+
+  // ATIVAÇÃO DOS EVENTOS GLOBAIS
+  inicializarEventos();
+
+  // Função para listar usuários na tela de gestão
+  function atualizarListaUsuarios() {
+    const corpo = document.getElementById('tabelaUsuariosCorpo');
+    if (!corpo) return;
+
+    // Segurança extra: se não for Desenvolvedor, nem tenta renderizar e esconde o card
+    if (usuarioLogado && usuarioLogado.nivel > 1) {
+      const cardLista = document.getElementById('cardListaUsuarios');
+      if (cardLista) cardLista.style.display = "none";
+      return;
+    }
+
+    corpo.innerHTML = "";
+    usuarios.forEach((u, index) => {
+      // Não permite deletar usuários protegidos (dev e leon)
+      const isProtected = u.usuario === 'dev' || u.usuario.toLowerCase() === 'leon';
+      const cargo = u.nivel === 1 ? '👨‍💻 Dev' : u.nivel === 2 ? '👔 Gestor' : '👷 Func.';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.usuario}</td>
+        <td>${cargo}</td>
+        <td style="text-align: center;">
+          ${!isProtected ? `
+            <button class="btn-acao btn-deletar delete-user" data-index="${index}" title="Excluir Usuário">
+              <i class="fas fa-user-minus"></i>
+            </button>
+          ` : '<small>Protegido</small>'}
+        </td>
+      `;
+      corpo.appendChild(tr);
+    });
+
+    // Eventos de exclusão de usuário
+    document.querySelectorAll('.delete-user').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const idx = this.getAttribute('data-index');
+        if (confirm(`Deseja excluir o usuário ${usuarios[idx].usuario}?`)) {
+          usuarios.splice(idx, 1);
+          salvarUsuarios();
+          atualizarListaUsuarios();
+        }
+      });
+    });
+  }
+
+  // Inicializa a lista se estiver na página correta
+  if (document.getElementById('tabelaUsuariosCorpo')) {
+    atualizarListaUsuarios();
   }
 
 });

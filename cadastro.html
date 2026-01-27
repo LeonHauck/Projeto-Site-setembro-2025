@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro - Giro de Itens</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Bibliotecas Locais -->
+    <script src="libs/chart.js"></script>
+    <script src="libs/jspdf.umd.min.js"></script>
+    <script src="libs/xlsx.full.min.js"></script>
+    <script src="libs/jspdf.plugin.autotable.min.js"></script>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <div id="painelPrincipal">
+        <header class="header-principal">
+            <div class="header-left">
+                <div class="logo-principal">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Giro de Itens</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button type="button" id="alternarTema" class="btn-tema" title="Alternar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div id="usuarioInfo" class="usuario-info">
+                    <img id="fotoTopo"
+                        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJCNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTQuMmMtMi41IDAtNC43MS0xLjI4LTYtMy4yMi4wMy0xLjk5IDQtMy4wOCA2LTMuMDggMS45OSAwIDUuOTcgMS4wOSA2IDMuMDgtMS4yOSAxLjk0LTMuNSAzLjIyLTYgMy4yMnoiLz48L3N2Zz4="
+                        alt="Foto de perfil" />
+                    <div class="usuario-details">
+                        <strong id="nomeUsuario">Usuário</strong>
+                        <small id="nivelUsuario">(Nível)</small>
+                    </div>
+                    <button type="button" id="logout" class="btn-logout" title="Sair da aplicação">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="nav-abas">
+            <a href="cadastro.html" class="aba ativa"><i class="fas fa-plus-circle"></i> Cadastro</a>
+            <a href="graficos.html" class="aba"><i class="fas fa-chart-bar"></i> Gráficos</a>
+            <a href="tabela.html" class="aba"><i class="fas fa-table"></i> Tabela</a>
+            <a href="relatorios.html" class="aba"><i class="fas fa-file-alt"></i> Relatórios</a>
+            <a href="usuarios.html" class="aba" id="usuarios"><i class="fas fa-users"></i> Usuários</a>
+            <a href="perfil.html" class="aba"><i class="fas fa-user-cog"></i> Perfil</a>
+        </nav>
+
+        <div class="container-principal">
+            <div class="conteudo-aba ativa" id="cadastro">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-plus"></i> Adicionar Novo Produto</h2>
+                        <p>Registre um novo produto no sistema</p>
+                    </div>
+                    <form id="formProduto" class="form-grid">
+                        <div class="form-group">
+                            <label for="produto"><i class="fas fa-box"></i> Nome do Produto</label>
+                            <input type="text" id="produto" placeholder="Ex: Notebook" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="quantidade"><i class="fas fa-cubes"></i> Quantidade Vendida</label>
+                            <input type="number" id="quantidade" placeholder="Quantidade" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="unidadesCaixa"><i class="fas fa-box-open"></i> Unidades por Caixa</label>
+                            <input type="number" id="unidadesCaixa" placeholder="Ex: 12" min="1" value="1" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="dataVenda"><i class="fas fa-calendar-alt"></i> Data da Venda</label>
+                            <input type="date" id="dataVenda" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="estoque"><i class="fas fa-warehouse"></i> Estoque Atual</label>
+                            <input type="number" id="estoque" placeholder="Estoque" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-check"></i> Adicionar Produto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer-principal">
+            <p>&copy; 2025 Leon • <strong>Painel de Giro de Itens</strong></p>
+            <p style="font-size: 12px; margin-top: 5px;">Sistema de Gerenciamento de Estoque v1.0</p>
+        </footer>
+    </div>
+</body>
+
+</html>
