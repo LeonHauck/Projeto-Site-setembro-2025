@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let dados = [];
   let usuarios = [];
   let usuarioLogado = null;
+  let grafico = null;
+  let graficoPrevisao = null;
 
   function carregarUsuarios() {
     const salvos = localStorage.getItem('usuarios');
@@ -11,10 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!Array.isArray(usuarios) || usuarios.length === 0) {
         carregarDefaults();
       } else {
-        // Fallback 2: Se o usuário 'dev' não existir (caso tenha sido deletado ou corrompido), recria os defaults para garantir acesso
-        const devExists = usuarios.some(u => u.usuario === 'dev');
-        if (!devExists) {
-          carregarDefaults(); // Resetar para garantir acesso
+        // Fallback 2: Se os usuários essenciais (dev ou leon) não existirem, garante que eles sejam recriados
+        const essencialExists = usuarios.some(u => u.usuario === 'dev') && usuarios.some(u => u.usuario === 'leon');
+        if (!essencialExists) {
+          console.warn("Usuários essenciais ausentes. Restaurando base...");
+          carregarDefaults();
         }
       }
     } else {
@@ -25,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function carregarDefaults() {
     usuarios = [
       { usuario: "dev", senha: "dev123", nivel: 1 },
+      { usuario: "leon", senha: "leon123", nivel: 1 },
       { usuario: "gestor", senha: "gestor123", nivel: 2 },
       { usuario: "func", senha: "func123", nivel: 3 }
     ];
@@ -101,53 +105,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const corpoTabela = document.getElementById('tabelaCorpo');
 
   function atualizarTabela() {
-    if (!corpoTabela) return;
-    corpoTabela.innerHTML = "";
-    dados.forEach((item, indice) => {
-      const estoque = parseInt(item.estoque) || 0;
-      const unidadesCaixa = parseInt(item.unidadesCaixa) || 1;
-      const quantidadeVendida = parseInt(item.quantidade) || 0;
-      const caixas = Math.ceil(estoque / unidadesCaixa);
-
-      const linha = document.createElement('tr');
-      linha.innerHTML = `
-        <td>${item.produto || 'Sem nome'}</td>
-        <td>${quantidadeVendida}</td>
-        <td>${unidadesCaixa} un.</td>
-        <td>${item.ultimaVenda || '-'}</td>
-        <td>${estoque}</td>
-        <td><strong>${caixas} cxs</strong></td>
-        <td>${parseInt(item.diasEstimados) || 0} dias</td>
-        <td style="text-align: center;">
-          <button class="btn-acao btn-editar" data-indice="${indice}" title="Editar">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-acao btn-deletar" data-indice="${indice}" title="Deletar">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      `;
-      corpoTabela.appendChild(linha);
-    });
-
-    // Adicionar event listeners aos botões
-    document.querySelectorAll('.btn-editar').forEach(btn => {
-      btn.addEventListener('click', function () {
-        abrirModalEdicao(parseInt(this.getAttribute('data-indice')));
-      });
-    });
-
-    document.querySelectorAll('.btn-deletar').forEach(btn => {
-      btn.addEventListener('click', function () {
-        deletarProduto(parseInt(this.getAttribute('data-indice')));
-      });
-    });
+    atualizarTabelaFiltrada(dados);
   }
 
   const canvasGiro = document.getElementById('graficoGiro');
   if (canvasGiro) {
     const ctx = canvasGiro.getContext('2d');
-    const grafico = new Chart(ctx, {
+    grafico = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: dados.map(item => item.produto),
@@ -159,11 +123,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { display: false },
-          title: {
-            display: false
-          }
+          legend: { display: false }
         }
       }
     });
@@ -172,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const canvasPrevisao = document.getElementById('graficoPrevisao');
   if (canvasPrevisao) {
     const ctx2 = canvasPrevisao.getContext('2d');
-    const graficoPrevisao = new Chart(ctx2, {
+    graficoPrevisao = new Chart(ctx2, {
       type: 'bar',
       data: {
         labels: dados.map(item => item.produto),
@@ -184,11 +147,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { display: false },
-          title: {
-            display: false
-          }
+          legend: { display: false }
         }
       }
     });
@@ -734,8 +696,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnLimpar = document.getElementById('limparFiltros');
     if (btnLimpar) {
       btnLimpar.addEventListener('click', () => {
-        document.getElementById('filtroNome').value = "";
-        document.getElementById('filtroData').value = "";
+        const fNome = document.getElementById('filtroNome');
+        const fData = document.getElementById('filtroData');
+        if (fNome) fNome.value = "";
+        if (fData) fData.value = "";
         atualizarTabela();
         const listaFull = typeof dados !== 'undefined' ? dados : [];
         if (typeof atualizarGraficoFiltrado === 'function') atualizarGraficoFiltrado(listaFull);
@@ -788,25 +752,31 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    document.getElementById('formPerfil').addEventListener('submit', function (e) {
-      e.preventDefault();
+    const formP = document.getElementById('formPerfil');
+    if (formP) {
+      formP.addEventListener('submit', function (e) {
+        e.preventDefault();
 
-      const nome = document.getElementById('nomePerfil').value.trim();
-      const email = document.getElementById('emailPerfil').value.trim();
-      const telefone = document.getElementById('telefonePerfil').value.trim();
-      const foto = document.getElementById('fotoPreview').src;
+        const nome = document.getElementById('nomePerfil').value.trim();
+        const email = document.getElementById('emailPerfil').value.trim();
+        const telefone = document.getElementById('telefonePerfil').value.trim();
+        const fotoPreview = document.getElementById('fotoPreview');
+        const foto = fotoPreview ? fotoPreview.src : "";
 
-      const perfil = { nome, email, telefone, foto };
-      localStorage.setItem(`perfil_${usuarioLogado.usuario}`, JSON.stringify(perfil));
+        const perfil = { nome, email, telefone, foto };
+        localStorage.setItem(`perfil_${usuarioLogado.usuario}`, JSON.stringify(perfil));
 
-      document.getElementById('statusPerfil').textContent = "✓ Perfil atualizado com sucesso!";
-      document.getElementById('statusPerfil').style.color = "#4caf50";
-      document.getElementById('statusPerfil').style.display = "block";
-
-      setTimeout(() => {
-        document.getElementById('statusPerfil').style.display = "none";
-      }, 3000);
-    });
+        const statusP = document.getElementById('statusPerfil');
+        if (statusP) {
+          statusP.textContent = "✓ Perfil atualizado com sucesso!";
+          statusP.style.color = "#4caf50";
+          statusP.style.display = "block";
+          setTimeout(() => {
+            if (statusP) statusP.style.display = "none";
+          }, 3000);
+        }
+      });
+    }
 
     const fotoInput = document.getElementById('fotoPerfil');
     if (fotoInput) {
@@ -894,7 +864,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const mediaDiaria = quantidade / 7;
         const diasEstimados = mediaDiaria > 0 ? Math.ceil(estoque / mediaDiaria) : 0;
 
-        // Formata data de YYYY-MM-DD para DD/MM/YYYY
         const dataPartes = data.split('-');
         const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
 
@@ -911,17 +880,19 @@ document.addEventListener("DOMContentLoaded", () => {
         salvarDadosLocal();
         atualizarTabela();
 
-        grafico.data.labels.push(novoItem.produto);
-        grafico.data.datasets[0].data.push(novoItem.quantidade);
-        grafico.update();
+        // Atualização Segura de Gráficos
+        if (typeof atualizarGraficoFiltrado === 'function') atualizarGraficoFiltrado(dados);
+        if (typeof atualizarGraficoPrevisao === 'function') atualizarGraficoPrevisao(dados);
 
-        graficoPrevisao.data.labels.push(novoItem.produto);
-        graficoPrevisao.data.datasets[0].data.push(novoItem.diasEstimados);
-        graficoPrevisao.update();
-
-        gerarSugestoesPedidos();
+        if (typeof gerarSugestoesPedidos === 'function') gerarSugestoesPedidos();
 
         formProduto.reset();
+
+        const msg = document.createElement('div');
+        msg.className = 'mensagem-sucesso';
+        msg.innerHTML = '<i class="fas fa-check-circle"></i> Produto cadastrado!';
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 3000);
       });
     }
 
@@ -988,15 +959,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function atualizarGraficoFiltrado(lista) {
-    grafico.data.labels = lista.map(item => item.produto);
-    grafico.data.datasets[0].data = lista.map(item => item.quantidade);
-    grafico.update();
+    if (grafico && grafico.data) {
+      grafico.data.labels = lista.map(item => item.produto);
+      grafico.data.datasets[0].data = lista.map(item => item.quantidade);
+      grafico.update();
+    }
   }
 
   function atualizarGraficoPrevisao(lista) {
-    graficoPrevisao.data.labels = lista.map(item => item.produto);
-    graficoPrevisao.data.datasets[0].data = lista.map(item => item.diasEstimados);
-    graficoPrevisao.update();
+    if (graficoPrevisao && graficoPrevisao.data) {
+      graficoPrevisao.data.labels = lista.map(item => item.produto);
+      graficoPrevisao.data.datasets[0].data = lista.map(item => item.diasEstimados);
+      graficoPrevisao.update();
+    }
   }
 
   // ===== FUNÇÕES DE EDIÇÃO =====
@@ -1065,10 +1040,10 @@ document.addEventListener("DOMContentLoaded", () => {
     salvarDadosLocal();
     fecharModal();
 
-    // Atualizar as visualizações
-    atualizarTabelaFiltrada(dados);
-    atualizarGraficoFiltrado(dados);
-    atualizarGraficoPrevisao(dados);
+    // Atualizar as visualizações de forma segura
+    atualizarTabela();
+    if (typeof atualizarGraficoFiltrado === 'function') atualizarGraficoFiltrado(dados);
+    if (typeof atualizarGraficoPrevisao === 'function') atualizarGraficoPrevisao(dados);
 
     // Mostrar mensagem de sucesso
     const mensagem = document.createElement('div');
@@ -1084,10 +1059,10 @@ document.addEventListener("DOMContentLoaded", () => {
       dados.splice(indice, 1);
       salvarDadosLocal();
 
-      // Atualizar as visualizações
-      atualizarTabelaFiltrada(dados);
-      atualizarGraficoFiltrado(dados);
-      atualizarGraficoPrevisao(dados);
+      // Atualizar as visualizações de forma segura
+      atualizarTabela();
+      if (typeof atualizarGraficoFiltrado === 'function') atualizarGraficoFiltrado(dados);
+      if (typeof atualizarGraficoPrevisao === 'function') atualizarGraficoPrevisao(dados);
 
       // Mostrar mensagem de sucesso
       const mensagem = document.createElement('div');
@@ -1096,6 +1071,50 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(mensagem);
       setTimeout(() => mensagem.remove(), 3000);
     }
+  }
+
+  function atualizarTabelaFiltrada(lista) {
+    if (!corpoTabela) return;
+    corpoTabela.innerHTML = "";
+    lista.forEach((item, indice) => {
+      const estoque = parseInt(item.estoque) || 0;
+      const unidadesCaixa = parseInt(item.unidadesCaixa) || 1;
+      const quantidadeVendida = parseInt(item.quantidade) || 0;
+      const caixas = Math.ceil(estoque / unidadesCaixa);
+
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td>${item.produto || 'Sem nome'}</td>
+        <td>${quantidadeVendida}</td>
+        <td>${unidadesCaixa} un.</td>
+        <td>${item.ultimaVenda || '-'}</td>
+        <td>${estoque}</td>
+        <td><strong>${caixas} cxs</strong></td>
+        <td>${parseInt(item.diasEstimados) || 0} dias</td>
+        <td style="text-align: center;">
+          <button class="btn-acao btn-editar" data-indice="${indice}" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-acao btn-deletar" data-indice="${indice}" title="Deletar">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      `;
+      corpoTabela.appendChild(linha);
+    });
+
+    // Re-adicionar event listeners (necessário porque o innerHTML foi resetado)
+    document.querySelectorAll('.btn-editar').forEach(btn => {
+      btn.addEventListener('click', function () {
+        abrirModalEdicao(parseInt(this.getAttribute('data-indice')));
+      });
+    });
+
+    document.querySelectorAll('.btn-deletar').forEach(btn => {
+      btn.addEventListener('click', function () {
+        deletarProduto(parseInt(this.getAttribute('data-indice')));
+      });
+    });
   }
 
   // Event listeners do modal (protegidos)
@@ -1208,5 +1227,6 @@ document.addEventListener("DOMContentLoaded", () => {
     atualizarListaUsuarios();
   }
 
+  // Removidas funções duplicadas que foram movidas/corrigidas acima
 });
 
