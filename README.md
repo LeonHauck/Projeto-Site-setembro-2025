@@ -199,5 +199,5 @@ Para dúvidas ou sugestões, entre em contato com o desenvolvedor.
 
 ---
 
-**Desenvolvido com ❤️ por Leon**  
+**Desenvolvido por Leon**  
 **Versão 1.0 | 2025**
